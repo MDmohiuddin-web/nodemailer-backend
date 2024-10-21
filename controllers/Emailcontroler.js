@@ -1,13 +1,6 @@
 require('dotenv').config();
 const expressAsyncHandler = require("express-async-handler");
 const nodemailer = require("nodemailer");
-
-console.log(process.env.EMAIL_USER);
-console.log(process.env.EMAIL_PASS);
-console.log(process.env.HOST_NAME);
-
-
- 
 let transporter = nodemailer.createTransport({
   host:process.env.HOST_NAME,
   port: 465,
@@ -19,13 +12,13 @@ let transporter = nodemailer.createTransport({
 });
 
 const sendEmail = expressAsyncHandler(async (req, res) => {
-  const { email, subject, message } = req.body;
-  console.log(email, subject, message);
+  const { emails,name, subject, message } = req.body;
+  console.log(emails, subject, message);
 
   try {
     const info = await transporter.sendMail({
-      from: `<${process.env.EMAIL_USER}>`, // Corrected to access the environment variable
-      to: email,
+      from: `${name}<${process.env.EMAIL_USER}>`, // Corrected to access the environment variable
+      to: emails,
       subject: subject,
       text: message,
       
