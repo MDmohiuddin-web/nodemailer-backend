@@ -25,7 +25,7 @@ const corsOptions = {
 };
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.BD_PASS}@cluster0.cg8xo0z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cg8xo0z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -39,7 +39,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db("smtpmailsystem").collection("users");
-    const studentCollection = client.db("smtpmailsystem").collection("student");
+    const studentsCollection = client.db("smtpmailsystem").collection("students");
     const hostingCollection = client.db("smtpmailsystem").collection("hosting");
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
@@ -82,25 +82,25 @@ async function run() {
     });
     // users collections for students
     // students collections api
-    app.post("/student", async (req, res) => {
+    app.post("/students", async (req, res) => {
       const user = req.body;
       //insert email if user does not exist
       //you can do this many ways (1:email unique, 2: upsert, 3: simple checking,)
       const filter = { email: user.email };
-      const existingUser = await studentCollection.findOne(filter);
+      const existingUser = await studentsCollection.findOne(filter);
       if (existingUser) {
         return res.send({ message: "user already exists", insertedId: null });
       }
-      const result = await studentCollection.insertOne(user);
+      const result = await studentsCollection.insertOne(user);
       res.send(result);
     });
 
 
     
-    app.get("/student/:id", async (req, res) => {
+    app.get("/students/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await studentCollection.findOne(query);
+      const result = await studentsCollection.findOne(query);
       if (result) {
         res.send(result);
       } else {
@@ -110,17 +110,17 @@ async function run() {
 
 
 
-    app.get("/student", async (req, res) => {
+    app.get("/students", async (req, res) => {
       console.log(req.headers);
-      const result = await studentCollection.find().toArray();
+      const result = await studentsCollection.find().toArray();
       res.send(result);
     });
 
-    // student collections for delete student
-    app.delete("/student/:id", async (req, res) => {
+    // students collections for delete students
+    app.delete("/students/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await studentCollection.deleteOne(query);
+      const result = await studentsCollection.deleteOne(query);
       res.send(result);
     });
     // students collections api
