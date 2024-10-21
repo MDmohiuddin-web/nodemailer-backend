@@ -76,7 +76,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
       subject: subject,
       message: message,
       sentAt: new Date(),
-      messageId: info?.messageId,
+     
     });
 
     res.json({ status: "success", message: "Email sent successfully!" });
