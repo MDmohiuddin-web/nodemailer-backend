@@ -25,6 +25,11 @@ const corsOptions = {
 };
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const {
+  sendEmail,
+  fetchEmails,
+  getEmailReplies,
+} = require("./controllers/Emailcontroler.js");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cg8xo0z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -39,7 +44,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db("smtpmailsystem").collection("users");
-    const studentsCollection = client.db("smtpmailsystem").collection("students");
+    const studentsCollection = client
+      .db("smtpmailsystem")
+      .collection("students");
     const hostingCollection = client.db("smtpmailsystem").collection("hosting");
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
@@ -95,8 +102,6 @@ async function run() {
       res.send(result);
     });
 
-
-    
     app.get("/students/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -107,8 +112,6 @@ async function run() {
         res.status(404).send({ message: "users not found" });
       }
     });
-
-
 
     app.get("/students", async (req, res) => {
       console.log(req.headers);
@@ -146,7 +149,7 @@ async function run() {
     // hosting collections for update hosting
     app.patch("/hosting/:id", async (req, res) => {
       const id = req.params.id;
-      const filter = { _id: new ObjectId(id) }; 
+      const filter = { _id: new ObjectId(id) };
       const user = req.body;
       const updateDoc = {
         $set: {
@@ -179,6 +182,10 @@ async function run() {
       const result = await hostingCollection.deleteOne(query);
       res.send(result);
     });
+// imap routes
+    app.post("/send-email", sendEmail);
+    app.get("/fetch-emails", fetchEmails);
+    app.get("/email-replies", getEmailReplies);
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
