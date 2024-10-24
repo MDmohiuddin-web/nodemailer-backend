@@ -33,6 +33,7 @@ async function connectToDatabase() {
 const db = client.db("smtpmailsystem");
 const userCollection = db.collection("users");
 const studentsCollection = db.collection("students");
+const hostingCollection = db.collection("hosting");
 const emailSendCollection = db.collection("email_send");
 const emailRepliesCollection = db.collection("email_replies");
 
@@ -172,11 +173,8 @@ const fetchEmails = expressAsyncHandler(async (req, res) => {
     }
 
     await connection.end();
-    res.json({
-      status: "success",
-      message: `Retrieved ${emails.length} new replies`,
-      emails,
-    });
+    res.json(emails);
+
   } catch (error) {
     console.error("Error fetching emails:", error);
     res.status(500).json({
