@@ -44,7 +44,7 @@ async function run() {
       .collection("students");
     const hostingCollection = client.db("smtpmailsystem").collection("hosting");
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // users collections api
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -172,7 +172,7 @@ async function run() {
 
     // hosting collections for delete hosting
     app.delete("/hosting/:id", async (req, res) => {
-      const id = req.params.id;
+      const id = req.params.id; 
       const query = { _id: new ObjectId(id) }; 
       const result = await hostingCollection.deleteOne(query);
       res.send(result);
@@ -184,7 +184,7 @@ async function run() {
     setInterval(fetchEmails, 60000); // Run every 60000 milliseconds (1 minute)   
 
     // Send a ping to confirm a successful connection 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );

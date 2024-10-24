@@ -179,7 +179,7 @@ const fetchEmails = expressAsyncHandler(async (req, res) => {
     res.json({ status: "success", data: emails });
   } catch (error) {
     console.error("Error fetching emails:", error);
-    res.status(500).json({
+    res.status(500).json({  
       status: "error",
       message: "Failed to fetch emails.",
       error: error.message, 
