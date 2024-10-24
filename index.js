@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
+
 require("dotenv").config();
 const emailRoutes = require("./Routing/emailRoutes.js");
 app.use(cors());
@@ -17,12 +18,6 @@ app.use(express.json());
  * app.patch('/user/:id')
  * app.delete('/user/:id')
  */
-
-const corsOptions = {
-  origin: "*",
-  credentials: true, //access-control-allow-credentials:true
-  optionSuccessStatus: 200,
-};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const {
@@ -178,16 +173,17 @@ async function run() {
     // hosting collections for delete hosting
     app.delete("/hosting/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
+      const query = { _id: new ObjectId(id) }; 
       const result = await hostingCollection.deleteOne(query);
       res.send(result);
     });
-// imap routes
-    app.post("/send-email", sendEmail);
-    app.get("/fetch-emails", fetchEmails);
+    // imap routes 
+    app.post("/send-email", sendEmail); 
     app.get("/email-replies", getEmailReplies);
+    app.get("/fetch-emails", fetchEmails);
+    setInterval(fetchEmails, 60000); // Run every 60000 milliseconds (1 minute)   
 
-    // Send a ping to confirm a successful connection
+    // Send a ping to confirm a successful connection 
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"

@@ -1,13 +1,12 @@
 require("dotenv").config();
-const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const nodemailer = require("nodemailer");
 const imaps = require("imap-simple");
 const { simpleParser } = require("mailparser");
-
+ 
 const uri = `mongodb+srv://${encodeURIComponent(
-  process.env.DB_USER
+  process.env.DB_USER 
 )}:${encodeURIComponent(
   process.env.DB_PASS
 )}@cluster0.cg8xo0z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -22,8 +21,10 @@ const client = new MongoClient(uri, {
 // Function to connect to MongoDB
 async function connectToDatabase() {
   try {
-    await client.connect();
-    console.log("Connected to MongoDB");
+    if (!client.topology || !client.topology.isConnected()) {
+      await client.connect();
+      console.log("Connected to MongoDB");
+    }
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
     throw error;
@@ -33,7 +34,7 @@ async function connectToDatabase() {
 const db = client.db("smtpmailsystem");
 const userCollection = db.collection("users");
 const studentsCollection = db.collection("students");
-const hostingCollection = db.collection("hosting");
+// const hostingCollection = db.collection("hosting");
 const emailSendCollection = db.collection("email_send");
 const emailRepliesCollection = db.collection("email_replies");
 
@@ -85,7 +86,7 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
 
     const infoResults = await Promise.all(promises);
     const infoMessageId = infoResults.map((info) => info.messageId);
-    console.log("infoMessageId:", infoMessageId);
+    // console.log("infoMessageId:", infoMessageId);
 
     // Log email send details in the database
     await emailSendCollection.insertOne({
@@ -106,8 +107,6 @@ const sendEmail = expressAsyncHandler(async (req, res) => {
       message: "Failed to send email.",
       error: error.message,
     });
-  } finally {
-    await client.close();
   }
 });
 
@@ -119,7 +118,7 @@ const imapConfig = {
     host: "imap.gmail.com",
     port: 993,
     tls: true,
-    authTimeout: 3000,
+    authTimeout: 10000,
     tlsOptions: { rejectUnauthorized: false },
   },
 };
@@ -147,13 +146,16 @@ const fetchEmails = expressAsyncHandler(async (req, res) => {
       const idHeader = "Imap-Id: " + id + "\r\n";
 
       const parsed = await simpleParser(idHeader + all.body);
+      console.log("Received reply from:", parsed.from.text);
+      console.log("Reply subject:", parsed.subject);
+      console.log("Reply content:", parsed.text);
 
       // Check if this is a reply to an existing email
       const originalEmail = await emailSendCollection.findOne({
         messageId: { $in: [parsed.inReplyTo] },
       });
 
-      const emailData = [{
+      const emailData = {
         from: parsed.from.text,
         to: parsed.to.text,
         subject: parsed.subject,
@@ -164,28 +166,28 @@ const fetchEmails = expressAsyncHandler(async (req, res) => {
         references: parsed.references,
         originalEmailId: originalEmail ? originalEmail._id : null,
         receivedAt: new Date(),
-      }];
+      };
 
-      emails.push(...emailData);
+      emails.push(emailData); 
 
       // Store email reply in MongoDB
-      await emailRepliesCollection.insertOne(emailData[0]);
+      await emailRepliesCollection.insertOne(emailData);
+      console.log("Email reply stored in MongoDB:", emailData);
     }
 
     await connection.end();
-    res.json(emails);
-
+    res.json({ status: "success", data: emails });
   } catch (error) {
     console.error("Error fetching emails:", error);
     res.status(500).json({
       status: "error",
       message: "Failed to fetch emails.",
-      error: error.message,
+      error: error.message, 
     });
-  } finally {
-    await client.close();
   }
 });
+
+
 // Get all email replies from database
 const getEmailReplies = expressAsyncHandler(async (req, res) => {
   try {
@@ -203,8 +205,6 @@ const getEmailReplies = expressAsyncHandler(async (req, res) => {
       message: "Failed to fetch email replies.",
       error: error.message,
     });
-  } finally {
-    await client.close();
   }
 });
 
